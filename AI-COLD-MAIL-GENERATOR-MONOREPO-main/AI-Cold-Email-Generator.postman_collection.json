@@ -1,0 +1,410 @@
+{
+	"info": {
+		"_postman_id": "e6a2eb6d-8c4d-4b8c-b9b5-6f9f8e4d2a1c",
+		"name": "AI Cold Email Generator API",
+		"description": "API collection for the AI Cold Email Generator MERN App.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Auth",
+			"item": [
+				{
+					"name": "1. Register User",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Test User\",\n    \"email\": \"testuser@example.com\",\n    \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/register",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"register"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "2. Verify OTP",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"userId\": \"replace_with_user_id_from_register_response\",\n    \"otp\": \"123456\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/verify-otp",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"verify-otp"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "3. Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set(\"jwt_token\", jsonData.token);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"testuser@example.com\",\n    \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "AI Generation",
+			"item": [
+				{
+					"name": "Generate Email",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"prompt\": \"Write a cold email to the VP of Sales at a mid-sized tech company offering an AI-powered lead scoring tool.\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/ai/generate-email",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"ai",
+								"generate-email"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get History",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/ai/history",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"ai",
+								"history"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Time Capsule",
+			"item": [
+				{
+					"name": "1. Create Draft",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set(\"capsule_id\", jsonData._id);",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "recipientEmail",
+									"value": "someone@example.com",
+									"type": "text"
+								},
+								{
+									"key": "subject",
+									"value": "Following up on our chat",
+									"type": "text"
+								},
+								{
+									"key": "message",
+									"value": "Hi, just checking in about the opportunity we discussed.",
+									"type": "text"
+								},
+								{
+									"key": "aiGenerated",
+									"value": "false",
+									"type": "text"
+								},
+								{
+									"key": "attachment",
+									"type": "file",
+									"src": []
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/capsules",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"capsules"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "2. Lock / Schedule",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"// Defaults the test to 2 minutes from now so the scheduler has something to pick up",
+									"const future = new Date(Date.now() + 2 * 60 * 1000).toISOString();",
+									"pm.collectionVariables.set(\"scheduled_at_test\", future);"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"scheduledAt\": \"{{scheduled_at_test}}\"\n}\n\n// Set this to null (or omit scheduledAt) instead, to send immediately"
+						},
+						"url": {
+							"raw": "{{base_url}}/capsules/{{capsule_id}}/lock",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"capsules",
+								"{{capsule_id}}",
+								"lock"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "3. Edit Capsule",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "subject",
+									"value": "Updated subject line",
+									"type": "text"
+								},
+								{
+									"key": "message",
+									"value": "Updated message body.",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/capsules/{{capsule_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"capsules",
+								"{{capsule_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "4. Cancel Capsule",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/capsules/{{capsule_id}}/cancel",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"capsules",
+								"{{capsule_id}}",
+								"cancel"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "5. Send Now",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/capsules/{{capsule_id}}/send-now",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"capsules",
+								"{{capsule_id}}",
+								"send-now"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "6. Get History",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/capsules",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"capsules"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:5000/api",
+			"type": "string"
+		},
+		{
+			"key": "jwt_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "capsule_id",
+			"value": "",
+			"type": "string"
+		}
+	]
+}
