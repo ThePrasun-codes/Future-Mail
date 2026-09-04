@@ -77,6 +77,15 @@ const TimeCapsule = () => {
         return fd;
     };
 
+    const getScheduledAtISO = () => {
+        if (!form.scheduledAt) return null;
+        const date = new Date(form.scheduledAt);
+        if(Number.isNaN(date.getTime())) {
+            throw new Error('Invalid scheduled date and time');
+        };
+        return date.toISOString();
+    }
+
     // sendImmediately=true -> "Send Now", false -> "Lock & Schedule" using form.scheduledAt
     const handleSchedule = async (sendImmediately) => {
         if (!form.recipientEmail || !form.subject || !form.message) {
@@ -92,7 +101,7 @@ const TimeCapsule = () => {
         try {
             if (editingId) {
                 const fd = buildFormData();
-                if (!sendImmediately) fd.append('scheduledAt', form.scheduledAt);
+                if (!sendImmediately) fd.append('scheduledAt', getScheduledAtISO());
                 await api.put(`/capsules/${editingId}`, fd);
                 if (sendImmediately) {
                     await api.post(`/capsules/${editingId}/send-now`);
@@ -102,7 +111,7 @@ const TimeCapsule = () => {
                 const fd = buildFormData();
                 const { data: draft } = await api.post('/capsules', fd);
                 await api.post(`/capsules/${draft._id}/lock`, {
-                    scheduledAt: sendImmediately ? null : form.scheduledAt,
+                    scheduledAt: sendImmediately ? null : getScheduledAtISO(),
                 });
                 toast.success(sendImmediately ? 'Sent!' : 'Capsule locked and scheduled.');
             }

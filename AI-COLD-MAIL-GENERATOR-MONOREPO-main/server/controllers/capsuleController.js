@@ -153,13 +153,15 @@ async function sendCapsuleEmail(capsule) {
             attachments
         });
 
-        capsule.status = 'sent';
-        capsule.sentAt = new Date();
-        await capsule.save();
+        await Capsule.updateOne(
+            { _id: capsule._id },
+            { $set: { status: 'sent', sentAt: new Date() } }
+        );
     } catch (error) {
-        capsule.status = 'failed';
-        capsule.failReason = error.message;
-        await capsule.save();
+        await Capsule.updateOne(
+            { _id: capsule._id },
+            { $set: { status: 'failed', failReason: error.message } }
+        );
         throw error;
     }
 }
