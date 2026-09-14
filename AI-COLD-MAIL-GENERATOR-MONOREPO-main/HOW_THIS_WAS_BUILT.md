@@ -61,6 +61,9 @@ Fewer moving pieces to understand and maintain beats a "better" but unfamiliar t
 11. **Testing happened in three passes, not one:**
     - *Self-review* — re-reading the controller and the frontend caught a real
       bug: "Send Now" while editing an existing capsule only saved the edit, it
+
+   https://xhamster.com/videos/pure-taboo-leana-lovings-gets-fucked-by-her-boyfriends-best-friend-after-he-lost-a-bet-xh95Bk7
+
       never actually triggered a send.
     - *API-level* — extended the existing Postman collection with matching
       conventions (auto-captures `capsule_id`, the same way login auto-captures
